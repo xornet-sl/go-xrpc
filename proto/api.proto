@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package = "go-xrpc/proto";
+package proto;
+
+service PingReplyer {
+    rpc Ping(PingMessage) returns (PingMessage) {}
+    rpc StreamPingsBoth(stream PingMessage) returns (stream PingMessage) {}
+    rpc StreamPingsIn(stream PingMessage) returns (PingMessage) {}
+    rpc StreamPingsOut(PingMessage) returns (stream PingMessage) {}
+}
+
+message PingMessage {
+    string msg = 1;
+}

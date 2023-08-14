@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+option go_package = "go-xrpc/xrpc/internal/xrpcpb";
+package xrpcpb;
+
+import "google/protobuf/any.proto";
+
+
+message Packet {
+    oneof packet_type {
+        System system = 1;
+
+        // Invokes
+        Request request = 2;
+        Response response = 3;
+
+        // Streams
+        // StreamRequest stream_request = 4;
+        // StreamResponse stream_response = 5;
+        StreamMsg stream_msg = 6;
+    }
+}
+
+message System {
+    oneof system_type {
+        Hello hello = 1;
+        CtxCancel ctx_cancel = 2;
+        uint64 set_window = 3;
+    }
+}
+
+message Hello {
+    bool flow_control = 1;
+    uint64 initial_window = 2;
+}
+
+message CtxCancel {
+    uint64 id = 1;
+    string cause = 2; // TODO: error struct using anypb
+}
+
+message Metadata {
+    message Pair {
+        string key = 1;
+        string value = 2;
+    }
+
+    repeated Pair pairs = 1;
+}
+
+message Request {
+    uint64 id = 1;
+    // type = 2;
+    string service = 3;
+    string method = 4;
+    bool is_notification = 5;
+    Metadata metadata = 6;
+    google.protobuf.Any in = 7;
+}
+
+message Response {
+    uint64 id = 1;
+    // type = 2;
+    Metadata metadata = 3;
+    google.protobuf.Any response = 4;
+    int32 error_num = 5;
+    string error = 6;
+}
+
+message StreamRequest {
+    uint64 id = 1;
+    //
+    string service = 3;
+    string method = 4;
+    uint64 initial_window = 5;
+}
+
+message StreamResponse {
+    uint64 id = 1;
+    //
+    uint64 initial_window = 3;
+}
+
+message StreamClose {
+    int32 error_num = 1;
+    string error = 2;
+}
+
+enum StreamSender {
+    RPC_CLIENT = 0;
+    RPC_SERVER = 1;
+}
+
+message StreamMsg {
+    uint64 id = 1;
+    StreamSender sender = 2;
+    //
+    oneof msg_type {
+        uint64 set_window = 3;
+        google.protobuf.Any msg = 4;
+        StreamClose close = 5;
+    }
+}
