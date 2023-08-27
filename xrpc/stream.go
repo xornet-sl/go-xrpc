@@ -41,6 +41,7 @@ type RpcStream interface {
 type rpcStream struct {
 	streamCtx context.Context
 	id        uint64
+	sendSeq   atomic.Uint64
 	conn      *RpcConn
 	side      StreamSide
 
@@ -51,7 +52,7 @@ type rpcStream struct {
 	fcLocalWindow   WindowSize
 
 	// Receive buffer
-	queue       deque.Deque[*anypb.Any]
+	queue       deque.Deque[*xrpcpb.StreamMsg]
 	active      atomic.Bool
 	remoteError string
 	buffByteLen atomic.Uint32
@@ -76,7 +77,7 @@ func newRpcStream(ctx context.Context, id uint64, parentConnection *RpcConn, sid
 }
 
 // Non-blocking. Called by RpcConn on read from socket. Fails if there is no buffer space left
-func (this *rpcStream) onSocketRead(msg *anypb.Any) error {
+func (this *rpcStream) onSocketRead(msg *xrpcpb.StreamMsg) error {
 	// TODO: check for localwindow
 	this.queueMu.Lock()
 	defer this.queueMu.Unlock()
@@ -106,8 +107,9 @@ func (this *rpcStream) SendMsg(m proto.Message) error {
 		return err
 	}
 	return this.writeStreamMsg(&xrpcpb.StreamMsg{
-		Id:     this.id,
-		Sender: xrpcpb.StreamSender(this.side),
+		StreamId: this.id,
+		SeqId:    this.sendSeq.Add(1),
+		Sender:   xrpcpb.StreamSender(this.side),
 		MsgType: &xrpcpb.StreamMsg_Msg{
 			Msg: marshalled,
 		},
@@ -126,7 +128,7 @@ func (this *rpcStream) RecvMsg(m proto.Message) error {
 		// TODO: check more exit conditions
 	}
 	msg := this.queue.PopFront()
-	return msg.UnmarshalTo(m)
+	return msg.GetMsg().UnmarshalTo(m)
 }
 
 func (this *rpcStream) CloseSend() error {
@@ -159,8 +161,9 @@ func (this *rpcStream) sendClose(errorNum int32, errorMsg string) {
 	this.conn.writeWsMessage(this.conn.serveCtx, &xrpcpb.Packet{
 		PacketType: &xrpcpb.Packet_StreamMsg{
 			StreamMsg: &xrpcpb.StreamMsg{
-				Id:     this.id,
-				Sender: xrpcpb.StreamSender(this.side),
+				StreamId: this.id,
+				SeqId:    this.sendSeq.Add(1),
+				Sender:   xrpcpb.StreamSender(this.side),
 				MsgType: &xrpcpb.StreamMsg_Close{
 					Close: &xrpcpb.StreamClose{
 						ErrorNum: errorNum,

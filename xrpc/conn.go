@@ -295,7 +295,7 @@ func (this *RpcConn) readWsMessage() error {
 	}
 
 	if streamMsg := v.GetStreamMsg(); streamMsg != nil {
-		go this.processStreamMsg(streamMsg)
+		this.processStreamMsg(streamMsg)
 		return nil
 	} else if request := v.GetRequest(); request != nil {
 		go this.processRequest(request)
@@ -478,27 +478,27 @@ func (this *RpcConn) handleIncomingStream(srv interface{}, handler StreamHandler
 }
 
 func (this *RpcConn) processStreamMsg(msg *xrpcpb.StreamMsg) {
-	id := msg.GetId()
+	streamId := msg.GetStreamId()
 	sender := msg.GetSender()
 	var stream *rpcStream
 	if sender == xrpcpb.StreamSender_RPC_SERVER {
 		// Remote part is a server. We are the client
 		this.clientStreamsMu.RLock()
-		stream = this.clientStreams[id]
+		stream = this.clientStreams[streamId]
 		this.clientStreamsMu.RUnlock()
 	} else {
 		// Remote part is a client. We are the server
 		this.serverStreamsMu.RLock()
-		stream = this.serverStreams[id]
+		stream = this.serverStreams[streamId]
 		this.serverStreamsMu.RUnlock()
 	}
 	if stream == nil {
-		this.logContext.logError(fmt.Errorf("unkown stream %d message received", id), "unable to process stream message")
+		this.logContext.logError(fmt.Errorf("unkown stream %d message received", streamId), "unable to process stream message")
 		return
 	}
 	switch msg.MsgType.(type) {
 	case *xrpcpb.StreamMsg_Msg:
-		stream.onSocketRead(msg.GetMsg())
+		stream.onSocketRead(msg)
 	case *xrpcpb.StreamMsg_SetWindow:
 		// TODO:
 	case *xrpcpb.StreamMsg_Close:

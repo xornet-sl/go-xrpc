@@ -92,12 +92,13 @@ enum StreamSender {
 }
 
 message StreamMsg {
-    uint64 id = 1;
+    uint64 stream_id = 1;
     StreamSender sender = 2;
+    uint64 seq_id = 3;
     //
     oneof msg_type {
-        uint64 set_window = 3;
-        google.protobuf.Any msg = 4;
-        StreamClose close = 5;
+        uint64 set_window = 4;
+        google.protobuf.Any msg = 5;
+        StreamClose close = 6;
     }
 }
