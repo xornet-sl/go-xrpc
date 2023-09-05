@@ -12,10 +12,10 @@ func genClient(gen *protogen.Plugin, file *protogen.File, g *protogen.GeneratedF
 		g.P("//")
 		g.P(deprecationComment)
 	}
-	g.Annotate(clientName, service.Location)
+	g.AnnotateSymbol(clientName, protogen.Annotation{Location: service.Location})
 	g.P("type ", clientName, " interface {")
 	for _, method := range service.Methods {
-		g.Annotate(clientName+"."+method.GoName, method.Location)
+		g.AnnotateSymbol(clientName+"."+method.GoName, protogen.Annotation{Location: method.Location})
 		if method.Desc.Options().(*descriptorpb.MethodOptions).GetDeprecated() {
 			g.P(deprecationComment)
 		}
