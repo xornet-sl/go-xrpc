@@ -33,6 +33,7 @@ type StreamDesc struct {
 type RpcStream interface {
 	SendMsg(m proto.Message) error
 	RecvMsg(m proto.Message) error
+	Context() context.Context
 	CloseSend() error
 	Close()
 	CloseWithError(err error)
@@ -74,6 +75,10 @@ func newRpcStream(ctx context.Context, id uint64, parentConnection *RpcConn, sid
 	stream.active.Store(true)
 	stream.queue.SetMinCapacity(5) // 2^5 = 32
 	return stream
+}
+
+func (this *rpcStream) Context() context.Context {
+	return this.streamCtx
 }
 
 // Non-blocking. Called by RpcConn on read from socket. Fails if there is no buffer space left
