@@ -116,6 +116,8 @@ func newRpcConn(connType ConnType, opts *options, parent connectionParent, remot
 	conn.logContext.logCallback = opts.onLog
 	conn.logContext.debugLogCallback = opts.onDebugLog
 
+	conn.wc.SetReadLimit(opts.callOpts.maxMessageSize)
+
 	return conn
 }
 

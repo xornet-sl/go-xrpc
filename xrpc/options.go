@@ -16,6 +16,7 @@ const (
 	defaultFlowControlEnabled      bool          = false
 	defaultConnectionInboundWindow WindowSize    = 100 * 1024 * 1024
 	defaultHelloTimeout            time.Duration = time.Second * 3
+	defaultMaxMessageSize          int64         = 1024 * 1024
 )
 
 type Option interface {
@@ -162,12 +163,14 @@ func defaultClientOpts() clientOptions {
 type callOptions struct {
 	callTimeout         time.Duration
 	streamInboundWindow WindowSize
+	maxMessageSize      int64
 }
 
 func defaultCallOpts() callOptions {
 	return callOptions{
 		callTimeout:         defaultCallTimeout,
 		streamInboundWindow: defaultStreamInboundWindow,
+		maxMessageSize:      defaultMaxMessageSize,
 	}
 }
 
@@ -180,6 +183,12 @@ func WithCallTimeout(callTimeout time.Duration) CallOption {
 func WithStreamInboundWindow(window WindowSize) CallOption {
 	return callOptionFunc(func(co *callOptions) {
 		co.streamInboundWindow = window
+	})
+}
+
+func WithMaxMessageSize(maxMessageSize int64) CallOption {
+	return callOptionFunc(func(co *callOptions) {
+		co.maxMessageSize = maxMessageSize
 	})
 }
 

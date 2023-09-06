@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+option go_package = "go-xrpc/cmd/xrpc-loadtest/proto";
+package proto;
+
+message Message {
+    bytes msg = 1;
+}
+
+service LoadTest {
+    rpc Call(Message) returns (Message);
+    rpc Stream(stream Message) returns (stream Message);
+}

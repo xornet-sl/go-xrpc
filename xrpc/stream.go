@@ -34,6 +34,7 @@ type RpcStream interface {
 	SendMsg(m proto.Message) error
 	RecvMsg(m proto.Message) error
 	Context() context.Context
+	GetIncomingQueueLen() int64
 	CloseSend() error
 	Close()
 	CloseWithError(err error)
@@ -53,12 +54,12 @@ type rpcStream struct {
 	fcLocalWindow   WindowSize
 
 	// Receive buffer
-	queue       deque.Deque[*xrpcpb.StreamMsg]
-	active      atomic.Bool
-	remoteError string
-	buffByteLen atomic.Uint32
-	queueMu     sync.Mutex
-	queueCond   *sync.Cond
+	queue        deque.Deque[*xrpcpb.StreamMsg]
+	queueByteLen atomic.Int64
+	active       atomic.Bool
+	remoteError  string
+	queueMu      sync.Mutex
+	queueCond    *sync.Cond
 }
 
 func newRpcStream(ctx context.Context, id uint64, parentConnection *RpcConn, side StreamSide) *rpcStream {
@@ -87,6 +88,7 @@ func (this *rpcStream) onSocketRead(msg *xrpcpb.StreamMsg) error {
 	this.queueMu.Lock()
 	defer this.queueMu.Unlock()
 	this.queue.PushBack(msg)
+	this.queueByteLen.Add(int64(len(msg.GetMsg().Value)))
 	this.queueCond.Signal()
 	return nil
 }
@@ -133,7 +135,12 @@ func (this *rpcStream) RecvMsg(m proto.Message) error {
 		// TODO: check more exit conditions
 	}
 	msg := this.queue.PopFront()
+	this.queueByteLen.Add(-int64(len(msg.GetMsg().Value)))
 	return msg.GetMsg().UnmarshalTo(m)
+}
+
+func (this *rpcStream) GetIncomingQueueLen() int64 {
+	return this.queueByteLen.Load()
 }
 
 func (this *rpcStream) CloseSend() error {
