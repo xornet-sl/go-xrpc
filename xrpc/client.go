@@ -7,9 +7,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/coder/websocket"
 	iutil "github.com/xornet-sl/go-xrpc/xrpc/internal/util"
 	"google.golang.org/grpc/metadata"
-	"nhooyr.io/websocket"
 )
 
 // RpcClient is a thin client fabric mainly needed to pre-register

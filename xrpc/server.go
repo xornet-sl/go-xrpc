@@ -8,11 +8,11 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/coder/websocket"
 	iutil "github.com/xornet-sl/go-xrpc/xrpc/internal/util"
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
-	"nhooyr.io/websocket"
 )
 
 const (

@@ -1,3 +1,4 @@
+// Package wspb provides helpers for reading and writing protobuf messages.
 package wspb
 
 import (
@@ -6,8 +7,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/golang/protobuf/proto"
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
+	"google.golang.org/protobuf/proto"
 )
 
 // Read reads a protobuf message from c into v.
@@ -29,15 +30,15 @@ func read(ctx context.Context, c *websocket.Conn, v proto.Message) (err error) {
 		return fmt.Errorf("expected binary message for protobuf but got: %v", typ)
 	}
 
-	b := bpoolGet()
-	defer bpoolPut(b)
+	buf := bpoolGet()
+	defer bpoolPut(buf)
 
-	_, err = b.ReadFrom(r)
+	_, err = buf.ReadFrom(r)
 	if err != nil {
 		return err
 	}
 
-	err = proto.Unmarshal(b.Bytes(), v)
+	err = proto.Unmarshal(buf.Bytes(), v)
 	if err != nil {
 		c.Close(websocket.StatusInvalidFramePayloadData, "failed to unmarshal protobuf")
 		return fmt.Errorf("failed to unmarshal protobuf: %w", err)
@@ -56,17 +57,18 @@ func write(ctx context.Context, c *websocket.Conn, v proto.Message) (err error) 
 	defer errdWrap(&err, "failed to write protobuf message")
 
 	b := bpoolGet()
-	pb := proto.NewBuffer(b.Bytes())
-	defer func() {
-		bpoolPut(bytes.NewBuffer(pb.Bytes()))
-	}()
+	defer func() { bpoolPut(b) }()
 
-	err = pb.Marshal(v)
+	buf := b.Bytes()
+
+	buf, err = proto.MarshalOptions{}.MarshalAppend(buf, v)
 	if err != nil {
 		return fmt.Errorf("failed to marshal protobuf: %w", err)
 	}
 
-	return c.Write(ctx, websocket.MessageBinary, pb.Bytes())
+	*b = *bytes.NewBuffer(buf) // reset buffer to new bytes
+
+	return c.Write(ctx, websocket.MessageBinary, buf)
 }
 
 // errdWrap wraps err with fmt.Errorf if err is non nil.
@@ -85,7 +87,7 @@ var bpool sync.Pool
 func bpoolGet() *bytes.Buffer {
 	b := bpool.Get()
 	if b == nil {
-		return &bytes.Buffer{}
+		return bytes.NewBuffer(nil)
 	}
 	return b.(*bytes.Buffer)
 }

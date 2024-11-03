@@ -12,3 +12,6 @@ testpb:
 		--go-xrpc_out=. --go-xrpc_opt=paths=source_relative \
 		--go-grpc_out=proto/grpc --go-grpc_opt=module=go-xrpc/proto \
 		proto/api.proto
+
+cloc:
+	@cloc --include-lang=Go --skip-uniqueness cmd internal

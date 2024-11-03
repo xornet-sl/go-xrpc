@@ -11,13 +11,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/coder/websocket"
 	iutil "github.com/xornet-sl/go-xrpc/xrpc/internal/util"
 	"github.com/xornet-sl/go-xrpc/xrpc/internal/wspb"
 	"github.com/xornet-sl/go-xrpc/xrpc/internal/xrpcpb"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-	"nhooyr.io/websocket"
 )
 
 type ConnType int

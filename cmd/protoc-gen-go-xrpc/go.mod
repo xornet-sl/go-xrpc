@@ -1,5 +1,7 @@
 module github.com/xornet-sl/go-xrpc/cmd/protoc-gen-go-xrpc
 
-go 1.20
+go 1.21
 
-require google.golang.org/protobuf v1.30.0
+toolchain go1.23.0
+
+require google.golang.org/protobuf v1.35.1

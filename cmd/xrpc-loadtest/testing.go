@@ -35,7 +35,7 @@ func (s *LoadTestServer) Stream(stream proto.LoadTest_StreamServer) error {
 	group, ctx := errgroup.WithContext(stream.Context())
 
 	Stats.RpcServer.stream.Store(stream)
-	defer Stats.RpcServer.stream.Store(nil)
+	// defer Stats.RpcServer.stream.Store(nil)
 
 	group.Go(func() error {
 		for {
@@ -110,7 +110,7 @@ func DoStream(ctx context.Context, conn *xrpc.RpcConn) error {
 		return err
 	}
 	Stats.RpcClient.stream.Store(stream)
-	defer Stats.RpcClient.stream.Store(nil)
+	// defer Stats.RpcClient.stream.Store(nil)
 
 	group, ctx := errgroup.WithContext(stream.Context())
 
