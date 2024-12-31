@@ -74,7 +74,7 @@ func newRpcStream(ctx context.Context, id uint64, parentConnection *RpcConn, sid
 	}
 	stream.queueCond = sync.NewCond(&stream.queueMu)
 	stream.active.Store(true)
-	stream.queue.SetMinCapacity(5) // 2^5 = 32
+	stream.queue.SetBaseCap(32)
 	return stream
 }
 

@@ -164,7 +164,7 @@ func (this wsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	pr := &peer.Peer{
-		Addr: net.Addr(iutil.StrAddr(r.RemoteAddr)),
+		Addr: net.Addr(iutil.StrAddr(r.RemoteAddr)), // TODO: support X-Real-IP / X-Forwarded-For
 	}
 	// TODO: attach timeouts to context
 	ctx := metadata.NewIncomingContext(r.Context(), md)
