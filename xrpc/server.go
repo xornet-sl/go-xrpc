@@ -75,12 +75,16 @@ func (this *RpcServer) Serve(ctx context.Context, addr string) error {
 		rs: this,
 	}
 
+	baseCtx := func(net.Listener) context.Context {
+		return ctx
+	}
 	hs := &http.Server{
 		Addr:         addr,
 		Handler:      ws,
 		ReadTimeout:  readTimeout,
 		WriteTimeout: writeTimeout,
 		TLSConfig:    this.opts.tlsConfig,
+		BaseContext:  baseCtx,
 	}
 	this.httpServer.Store(hs)
 	hs.RegisterOnShutdown(this.onShutdown)
