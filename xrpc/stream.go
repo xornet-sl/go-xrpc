@@ -123,7 +123,7 @@ func (this *rpcStream) SendMsg(m proto.Message) error {
 	})
 }
 
-// Called by client code from stram handler. Blocks there is a message from wire
+// Called by client code from stream handler. Blocks there is a message from wire
 func (this *rpcStream) RecvMsg(m proto.Message) error {
 	this.queueMu.Lock()
 	defer this.queueMu.Unlock()

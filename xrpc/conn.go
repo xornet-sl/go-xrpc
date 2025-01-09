@@ -171,13 +171,9 @@ func (this *RpcConn) serve(ctx context.Context) (retError error) {
 
 	this.incomingMD, _ = metadata.FromIncomingContext(ctx)
 	this.outgoingMD, _ = metadata.FromOutgoingContext(ctx)
-	ctx = this.populateCtxWithTransport(ctx)
+	this.serveCtx = this.populateCtxWithTransport(ctx)
 
 	defer close(this.writeQueue)
-
-	var cancel context.CancelCauseFunc
-	this.serveCtx, cancel = context.WithCancelCause(ctx)
-	defer func() { cancel(retError) }()
 
 	closed := false
 	defer func() {
@@ -194,7 +190,10 @@ func (this *RpcConn) serve(ctx context.Context) (retError error) {
 
 	defer this.cleanupStreams()
 
-	this.exchangeHello()
+	if err := this.exchangeHello(); err != nil {
+		this.wc.Close(websocket.StatusInternalError, "connection can not be opened: "+err.Error())
+		return fmt.Errorf("connection hello exchange error: %w", err)
+	}
 
 	if newCtx, err := this.onOpen(); err != nil {
 		this.wc.Close(websocket.StatusInternalError, "connection can not be opened: "+err.Error())
@@ -202,6 +201,10 @@ func (this *RpcConn) serve(ctx context.Context) (retError error) {
 	} else if newCtx != nil {
 		this.serveCtx = newCtx
 	}
+	var cancel context.CancelCauseFunc
+	this.serveCtx, cancel = context.WithCancelCause(this.serveCtx)
+	defer func() { cancel(retError) }()
+
 	defer func() { this.onClose(retError) }()
 	this.active.Store(true)
 	close(this.initializedChan) // set up initialized flag
