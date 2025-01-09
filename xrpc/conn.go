@@ -175,6 +175,10 @@ func (this *RpcConn) serve(ctx context.Context) (retError error) {
 
 	defer close(this.writeQueue)
 
+	var cancel context.CancelCauseFunc
+	this.serveCtx, cancel = context.WithCancelCause(this.serveCtx)
+	defer func() { cancel(retError) }()
+
 	closed := false
 	defer func() {
 		if closed {
@@ -201,9 +205,6 @@ func (this *RpcConn) serve(ctx context.Context) (retError error) {
 	} else if newCtx != nil {
 		this.serveCtx = newCtx
 	}
-	var cancel context.CancelCauseFunc
-	this.serveCtx, cancel = context.WithCancelCause(this.serveCtx)
-	defer func() { cancel(retError) }()
 
 	defer func() { this.onClose(retError) }()
 	this.active.Store(true)

@@ -41,6 +41,7 @@ func (f callOptionFunc) apply(opts *callOptions) {
 
 // Common options
 
+// OnConnOpenCallback should return nil context or context which is based on ctx
 type OnConnOpenCallback func(ctx context.Context, conn *RpcConn) (context.Context, error)
 type OnConnClosedCallback func(ctx context.Context, conn *RpcConn, closeError error)
 type options struct {
