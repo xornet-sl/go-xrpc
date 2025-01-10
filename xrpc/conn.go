@@ -210,6 +210,10 @@ func (this *RpcConn) serve(ctx context.Context) (retError error) {
 	this.active.Store(true)
 	close(this.initializedChan) // set up initialized flag
 
+	if this.opts.onConnOpenReady != nil {
+		go this.opts.onConnOpenReady(this)
+	}
+
 	go func() {
 		// Writer
 		for {

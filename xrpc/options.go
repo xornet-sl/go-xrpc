@@ -43,6 +43,10 @@ func (f callOptionFunc) apply(opts *callOptions) {
 
 // OnConnOpenCallback should return nil context or context which is based on ctx
 type OnConnOpenCallback func(ctx context.Context, conn *RpcConn) (context.Context, error)
+
+// OnConnOpenReadyCallback is being executed in a separate goroutine after all the connection setup is done
+type OnConnOpenReadyCallback func(conn *RpcConn)
+
 type OnConnClosedCallback func(ctx context.Context, conn *RpcConn, closeError error)
 type options struct {
 	sopts    serverOptions
@@ -54,10 +58,11 @@ type options struct {
 
 	tlsConfig *tls.Config
 
-	onLog        OnLogCallback
-	onDebugLog   OnDebugLogCallback
-	onConnOpen   OnConnOpenCallback
-	onConnClosed OnConnClosedCallback
+	onLog           OnLogCallback
+	onDebugLog      OnDebugLogCallback
+	onConnOpen      OnConnOpenCallback
+	onConnOpenReady OnConnOpenReadyCallback
+	onConnClosed    OnConnClosedCallback
 }
 
 func defaultOptions() *options {
@@ -111,6 +116,12 @@ func WithOnDebugLogCallback(fn OnDebugLogCallback) Option {
 func WithConnOpenCallback(onConnOpen OnConnOpenCallback) Option {
 	return optionFunc(func(o *options) {
 		o.onConnOpen = onConnOpen
+	})
+}
+
+func WithConnOpenReadyCallback(onConnOpenReady OnConnOpenReadyCallback) Option {
+	return optionFunc(func(o *options) {
+		o.onConnOpenReady = onConnOpenReady
 	})
 }
 
