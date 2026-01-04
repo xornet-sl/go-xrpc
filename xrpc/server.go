@@ -41,9 +41,10 @@ type RpcServer struct {
 
 	services *ServiceRegistry
 
-	httpServer atomic.Value
-	connMu     sync.Mutex
-	conns      map[*RpcConn]struct{}
+	httpServer     atomic.Value
+	customListener net.Listener
+	connMu         sync.Mutex
+	conns          map[*RpcConn]struct{}
 }
 
 func NewServer(options ...Option) (*RpcServer, error) {
@@ -68,7 +69,12 @@ func (this *RpcServer) RegisterService(desc *ServiceDesc, impl interface{}) {
 	}
 }
 
-func (this *RpcServer) Serve(ctx context.Context, addr string) error {
+func (this *RpcServer) Serve(ctx context.Context, l net.Listener) error {
+	this.customListener = l
+	return this.ServeAndListen(ctx, "")
+}
+
+func (this *RpcServer) ServeAndListen(ctx context.Context, addr string) error {
 	this.services.Freeze()
 
 	ws := wsServer{

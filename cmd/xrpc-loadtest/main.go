@@ -69,7 +69,7 @@ func server(ctx context.Context, opts []xrpc.Option) error {
 	proto.RegisterLoadTestServer(server, &Rpc.server)
 
 	logrus.Infof("Listening on %s", Cfg.Listen)
-	return server.Serve(ctx, Cfg.Listen)
+	return server.ServeAndListen(ctx, Cfg.Listen)
 }
 
 func onOpen(ctx context.Context, conn *xrpc.RpcConn) (context.Context, error) {

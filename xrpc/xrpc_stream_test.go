@@ -51,7 +51,7 @@ func StreamServer(ctx context.Context, t *testing.T) error {
 	}
 	tester := &serverTester{srv: srv}
 	pb.RegisterPingReplyerServer(srv, tester)
-	if err := srv.Serve(ctx, "localhost:9000"); err != nil {
+	if err := srv.ServeAndListen(ctx, "localhost:9000"); err != nil {
 		t.Errorf("srv.Serve err: %v", err)
 		return err
 	}

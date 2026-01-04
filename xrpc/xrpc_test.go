@@ -77,7 +77,7 @@ func Server(ctx context.Context, t *testing.T) error {
 	}
 	pb.RegisterPingReplyerServer(srv, &serverTester{srv: srv})
 	go func() {
-		if err := srv.Serve(ctx, "localhost:9000"); err != nil {
+		if err := srv.ServeAndListen(ctx, "localhost:9000"); err != nil {
 			t.Errorf("srv.Serve err: %v", err)
 		}
 	}()
